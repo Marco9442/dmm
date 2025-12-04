@@ -1,50 +1,690 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>プライバシーポリシー｜DMMサービス紹介サイト</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>プライバシーポリシー｜DMMサービス紹介サイト</title>
 
-<body>
+    <!-- Three.js & libs (CDN) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- 不使用 OrbitControls.js，避免构造器不兼容问题 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.1.0/chroma.min.js"></script>
 
-<nav style="width:100%; padding:15px 0; background:#ffffffd9; position:sticky; top:0; backdrop-filter:blur(10px); border-bottom:1px solid #e5e5e5; z-index:999;">
-  <div style="max-width:900px; margin:0 auto; display:flex; gap:20px; font-size:15px;">
-    <a href="index.html" style="text-decoration:none; color:#333;">ホーム</a>
-    <a href="about.html" style="text-decoration:none; color:#333;">このサイトについて</a>
-    <a href="privacy.html" style="text-decoration:none; color:#333;">プライバシーポリシー</a>
-    <a href="contact.html" style="text-decoration:none; color:#333;">お問い合わせ</a>
-  </div>
-</nav>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans",
+          "Noto Sans JP", "Noto Sans", sans-serif;
+        color: #222;
+        background: #0f1113;
+        min-height: 100vh;
+        overflow-y: auto;
+      }
+      canvas.bg-canvas {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -2;
+        display: block;
+      }
+      .bg-overlay {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(
+          180deg,
+          rgba(0, 0, 0, 0.25),
+          rgba(0, 0, 0, 0.45)
+        );
+        z-index: -1;
+        pointer-events: none;
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        padding: 28px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        transition: padding 240ms ease, background 240ms ease,
+          box-shadow 240ms ease;
+        backdrop-filter: blur(6px) saturate(120%);
+      }
+      header.compact {
+        padding: 10px 20px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+      }
+      .site-title {
+        color: #fff;
+        font-size: 20px;
+        font-weight: 700;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+      }
+      .site-sub {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 13px;
+      }
+      .header-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #fff;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: transform 160ms ease, background 160ms;
+        backdrop-filter: blur(6px);
+      }
+      .btn:active {
+        transform: translateY(1px);
+      }
+      .btn.muted {
+        background: transparent;
+        border-color: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.9);
+      }
 
-<div style="max-width:820px; margin:40px auto; padding:20px; background:#fff; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+      .container {
+        max-width: 860px;
+        margin: 28px auto 80px;
+        padding: 0 18px;
+      }
 
-<h1>プライバシーポリシー</h1>
+      .card {
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 22px;
+        color: #fff;
+        box-shadow: 0 6px 20px rgba(7, 7, 10, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(8px) saturate(120%);
+        transform: translateY(16px);
+        opacity: 0;
+        transition: transform 520ms cubic-bezier(0.22, 0.9, 0.33, 1),
+          opacity 520ms ease;
+      }
+      .card.visible {
+        transform: translateY(0);
+        opacity: 1;
+      }
 
-<p>
-当サイトでは、アクセス解析ツールや広告配信のため、必要な範囲で情報を取得する場合があります。
-取得する情報は個人を特定するものではなく、匿名データとして扱われます。
-</p>
+      h2 {
+        margin-top: 0;
+        color: #fff;
+        font-size: 20px;
+        margin-bottom: 10px;
+      }
+      p,
+      li {
+        color: rgba(255, 255, 255, 0.9);
+        line-height: 1.7;
+        font-size: 14px;
+      }
+      ul {
+        padding-left: 18px;
+        margin: 6px 0 8px 0;
+      }
 
-<h2>アクセス解析ツールについて</h2>
-<p>
-当サイトでは、一般的なアクセス解析ツールを利用する場合があります。
-解析に使用されるデータは匿名で収集され、個人が特定されることはありません。
-</p>
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .tile {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        transition: transform 180ms ease, background 180ms;
+      }
+      .tile:hover {
+        transform: translateY(-6px);
+        background: rgba(255, 255, 255, 0.06);
+      }
 
-<h2>広告について</h2>
-<p>
-当サイトでは、アフィリエイトリンクを使用する場合があります。
-リンク先のサービスや商品に関するお問い合わせは、提供元企業へ直接お願いいたします。
-</p>
+      footer {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.7);
+        margin-top: 28px;
+        font-size: 13px;
+      }
 
-<h2>免責事項</h2>
-<p>
-当サイトに掲載している情報は、できる限り正確な内容を心がけていますが、
-情報の正確性や最新性を保証するものではありません。リンク先で発生したトラブル等について、当サイトは責任を負いません。
-</p>
+      .night body {
+        background: linear-gradient(#06070a, #0b0c10);
+      }
+      .night .card {
+        background: rgba(12, 12, 14, 0.6);
+      }
 
-</div>
+      @media (max-width: 700px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        header {
+          padding: 14px 12px;
+        }
+        .site-title {
+          font-size: 16px;
+        }
+      }
+      .mutedText {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 13px;
+        margin-top: 8px;
+      }
+      /* ===== 顶部导航栏 ===== */
 
-</body>
+      .top-nav {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 9999;
+
+        /* 玻璃态背景 */
+        background: rgba(20, 20, 20, 0.35);
+        backdrop-filter: blur(12px);
+
+        /* 微光边框 */
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+        padding: 12px 0;
+      }
+
+      .nav-inner {
+        width: 90%;
+        max-width: 980px;
+        margin: 0 auto;
+
+        display: flex;
+        justify-content: center;
+        gap: 28px;
+      }
+
+      .top-nav a {
+        color: #eaeaea;
+        font-size: 15px;
+        text-decoration: none;
+        font-weight: 500;
+
+        position: relative;
+        transition: color 0.25s ease;
+      }
+
+      /* 下划线动效 */
+      .top-nav a::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -4px;
+        width: 0%;
+        height: 2px;
+        background: linear-gradient(90deg, #00eaff, #7effff);
+        transition: width 0.25s ease;
+        border-radius: 2px;
+      }
+
+      /* hover 效果 */
+      .top-nav a:hover {
+        color: #ffffff;
+      }
+
+      .top-nav a:hover::after {
+        width: 100%;
+      }
+
+      /* ===== 手机端优化 ===== */
+      @media (max-width: 600px) {
+        .nav-inner {
+          gap: 18px;
+        }
+        .top-nav a {
+          font-size: 13px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas class="bg-canvas" id="bg-canvas"></canvas>
+    <div class="bg-overlay" aria-hidden="true"></div>
+
+    <header id="site-header">
+      <div class="site-title">
+        <div
+          style="
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #ffb86b, #ff6b9a);
+            box-shadow: 0 8px 24px rgba(255, 107, 154, 0.16);
+          "
+        ></div>
+        <div>
+          <div style="line-height: 1">DMMサービス紹介・おすすめ情報まとめ</div>
+          <div class="site-sub" style="margin-top: 6px">
+            気になる作品・サービスを分かりやすくピックアップ
+          </div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="toggle-theme" class="btn muted" title="切换夜间模式">
+          Night
+        </button>
+        <a
+          class="btn"
+          href="https://www.dmm.com/"
+          target="_blank"
+          rel="noopener"
+          >DMMへ</a
+        >
+      </div>
+    </header>
+    <nav class="top-nav">
+      <div class="nav-inner">
+        <a href="index.html">ホーム</a>
+        <a href="about.html">このサイトについて</a>
+        <a href="privacy.html">プライバシーポリシー</a>
+        <a href="contact.html">お問い合わせ</a>
+      </div>
+    </nav>
+    <main class="container" id="main">
+        <section class="card" data-delay="0">
+            <h1>プライバシーポリシー</h1>
+            <p>
+            当サイトでは、アクセス解析ツールや広告配信のため、必要な範囲で情報を取得する場合があります。
+            取得する情報は個人を特定するものではなく、匿名データとして扱われます。
+            </p>
+        </section>
+        <section class="card" data-delay="100">
+            <h2>アクセス解析ツールについて</h2>
+            <p>
+            当サイトでは、一般的なアクセス解析ツールを利用する場合があります。
+            解析に使用されるデータは匿名で収集され、個人が特定されることはありません。
+            </p>
+        </section>
+        <section class="card" data-delay="200">
+            <h2>広告について</h2>
+            <p>
+            当サイトでは、アフィリエイトリンクを使用する場合があります。
+            リンク先のサービスや商品に関するお問い合わせは、提供元企業へ直接お願いいたします。
+            </p>
+        </section>
+        <section class="card" data-delay="300">
+            <h2>免責事項</h2>
+            <p>
+            当サイトに掲載している情報は、できる限り正確な内容を心がけていますが、
+            情報の正確性や最新性を保証するものではありません。リンク先で発生したトラブル等について、当サイトは責任を負いません。
+            </p>
+        </section>
+      <footer>
+        本サイトは個人による情報提供サイトであり、DMM.com・FANZAの公式サイトではありません。
+      </footer>
+    </main>
+
+    <script>
+      (function () {
+        if (typeof THREE === "undefined") {
+          console.warn("Three.js 未加载，背景动画被禁用。");
+          return;
+        }
+
+        const conf = {
+          fov: 60,
+          cameraZ: 140,
+          tubeRadius: 2.2,
+          resY: 18,
+          noiseCoef: 50,
+          timeCoef: 50,
+          heightCoef: 18,
+          ambientColor: 0x222222,
+          lightIntensity: 1.0,
+          lightColors: [0x24f59e, 0xe15040, 0x1b859e, 0x4cb04b],
+        };
+
+        const canvas = document.getElementById("bg-canvas");
+        const header = document.getElementById("site-header");
+        const main = document.getElementById("main");
+
+        // renderer & scene & camera
+        const renderer = new THREE.WebGLRenderer({
+          canvas: canvas,
+          antialias: true,
+          alpha: true,
+        });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+        renderer.setClearColor(0x000000, 0);
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(
+          conf.fov,
+          window.innerWidth / window.innerHeight,
+          1,
+          2000
+        );
+        camera.position.z = conf.cameraZ;
+
+        // 简单交互：拖动平移 + 滚轮缩放（不允许旋转）
+        let isPointerDown = false,
+          lastPointer = { x: 0, y: 0 };
+        let targetPan = { x: 0, y: 0 },
+          currentPan = { x: 0, y: 0 };
+        canvas.addEventListener("pointerdown", (e) => {
+          isPointerDown = true;
+          lastPointer.x = e.clientX;
+          lastPointer.y = e.clientY;
+          canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId);
+        });
+        window.addEventListener("pointerup", (e) => {
+          isPointerDown = false;
+          canvas.releasePointerCapture &&
+            canvas.releasePointerCapture(e.pointerId);
+        });
+        window.addEventListener("pointermove", (e) => {
+          if (!isPointerDown) return;
+          const dx = e.clientX - lastPointer.x;
+          const dy = e.clientY - lastPointer.y;
+          targetPan.x += dx * 0.02;
+          targetPan.y -= dy * 0.02;
+          lastPointer.x = e.clientX;
+          lastPointer.y = e.clientY;
+        });
+        window.addEventListener(
+          "wheel",
+          (e) => {
+            const delta = e.deltaY * 0.03;
+            camera.position.z = Math.min(
+              800,
+              Math.max(60, camera.position.z + delta)
+            );
+          },
+          { passive: true }
+        );
+
+        // resize
+        let wWidth = window.innerWidth,
+          wHeight = window.innerHeight;
+        function updateRendererSize() {
+          wWidth = window.innerWidth;
+          wHeight = window.innerHeight;
+          renderer.setSize(wWidth, wHeight);
+          camera.aspect = wWidth / wHeight;
+          camera.updateProjectionMatrix();
+        }
+        updateRendererSize();
+        window.addEventListener("resize", updateRendererSize);
+
+        // lights
+        const ambient = new THREE.AmbientLight(conf.ambientColor, 0.8);
+        scene.add(ambient);
+        const lights = [];
+        for (let i = 0; i < 4; i++) {
+          const pl = new THREE.PointLight(
+            conf.lightColors[i % conf.lightColors.length],
+            conf.lightIntensity,
+            800
+          );
+          scene.add(pl);
+          lights.push(pl);
+        }
+
+        // noise & color
+        const simplex = new SimplexNoise();
+        let cscale = chroma.scale(["#ff6b9a", "#ffd79a", "#ffffff"]);
+
+        // world size at given Z (approx)
+        function getWorldSizeAtZ(z) {
+          const vFOV = (camera.fov * Math.PI) / 180;
+          const height =
+            2 * Math.tan(vFOV / 2) * Math.abs(z - camera.position.z);
+          const width = height * camera.aspect;
+          return [Math.abs(width), Math.abs(height)];
+        }
+
+        // Tube collection
+        const tubes = [];
+
+        function makeTubes() {
+          tubes.forEach((t) => {
+            scene.remove(t.mesh);
+            if (t.geometry) t.geometry.dispose();
+            if (t.material) t.material.dispose();
+          });
+          tubes.length = 0;
+
+          const rows = Math.max(6, Math.round(window.innerHeight / conf.resY));
+          const colsSegments = Math.max(60, Math.round(window.innerWidth / 12));
+          const world = getWorldSizeAtZ(camera.position.z - conf.cameraZ);
+          const worldWidth = world[0] * 0.9;
+          const worldHeight = world[1] * 0.9;
+
+          for (let j = 0; j < rows; j++) {
+            const color = new THREE.Color(cscale(Math.random()).hex());
+            const y = -worldHeight / 2 + (j / (rows - 1 || 1)) * worldHeight;
+            const curveNoise = {
+              coef: conf.noiseCoef * 0.00012,
+              height: conf.heightCoef,
+              time: Date.now() * conf.timeCoef * 0.000002,
+              mouseX: 0,
+              mouseY: 0,
+              mouse: 0,
+            };
+            const curve = new CustomCurve(
+              -worldWidth / 2,
+              y,
+              worldWidth,
+              curveNoise
+            );
+            const segments = Math.max(80, colsSegments);
+            const geometry = new THREE.TubeBufferGeometry(
+              curve,
+              segments,
+              conf.tubeRadius,
+              8,
+              false
+            );
+            const material = new THREE.MeshStandardMaterial({
+              color: color,
+              metalness: 0.25,
+              roughness: 0.4,
+              emissive: 0x000000,
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.z = -(j % 2) * 12;
+            mesh.userData = { baseY: y, curve, segments };
+            scene.add(mesh);
+            tubes.push({ mesh, geometry, material, curve });
+          }
+        }
+
+        // 修复点：用 class 继承 THREE.Curve（兼容现代 Three.js）
+        class CustomCurve extends THREE.Curve {
+          constructor(x, y, l, noise) {
+            super();
+            this.x = x;
+            this.y = y;
+            this.l = l;
+            this.noise = noise || {};
+            this.yn = this.y * (this.noise.coef || 1);
+          }
+          getPoint(t /*, optionalTarget */) {
+            const x = this.x + t * this.l;
+            const xn = x * (this.noise.coef || 0.0001);
+            const time = this.noise.time || 0;
+            const n1 = simplex.noise2D(
+              xn + time + (this.noise.mouseX || 0) / 2,
+              this.yn - time + (this.noise.mouseY || 0) / 2
+            );
+            const n2 = simplex.noise2D(this.yn + time, xn - time);
+            const z = n2 * (this.noise.height || 18);
+            const y = this.y + n1 * (this.noise.height || 18);
+            return new THREE.Vector3(x, y, z);
+          }
+        }
+
+        // animate loop
+        function animateScene() {
+          const t = Date.now() * 0.001;
+          const dx = wWidth * 0.5,
+            dy = wHeight * 0.5;
+          if (lights[0])
+            lights[0].position.set(
+              Math.sin(t * 0.14) * dx,
+              Math.cos(t * 0.2) * dy,
+              50
+            );
+          if (lights[1])
+            lights[1].position.set(
+              Math.cos(t * 0.18) * dx,
+              Math.sin(t * 0.16) * dy,
+              60
+            );
+          if (lights[2])
+            lights[2].position.set(
+              Math.sin(t * 0.1) * dx,
+              Math.sin(t * 0.12) * dy,
+              40
+            );
+          if (lights[3])
+            lights[3].position.set(
+              Math.sin(t * 0.22) * dx,
+              Math.cos(t * 0.08) * dy,
+              70
+            );
+
+          // smooth pan interpolation
+          currentPan.x += (targetPan.x - currentPan.x) * 0.08;
+          currentPan.y += (targetPan.y - currentPan.y) * 0.08;
+          camera.position.x = currentPan.x;
+          camera.position.y = currentPan.y;
+
+          for (let i = 0; i < tubes.length; i++) {
+            const item = tubes[i];
+            const mesh = item.mesh;
+            const mat = item.material;
+            const hueShift = (Math.sin(t * 0.6 + i * 0.4) * 0.5 + 0.5) * 0.2;
+            mat.emissiveIntensity = 0.08 + hueShift * 0.12;
+            mesh.rotation.z = 0.002 * Math.sin(t * 0.4 + i);
+            mesh.position.x = 6 * Math.sin(t * 0.14 + i * 0.2);
+            mesh.position.y =
+              mesh.userData.baseY + 6 * Math.sin(t * 0.18 + i * 0.3);
+          }
+
+          renderer.render(scene, camera);
+          requestAnimationFrame(animateScene);
+        }
+
+        // build and start
+        makeTubes();
+        animateScene();
+
+        let resizeTimer = null;
+        window.addEventListener("resize", () => {
+          updateRendererSize();
+          if (resizeTimer) clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(() => {
+            makeTubes();
+          }, 300);
+        });
+
+        // click to recolor
+        document.body.addEventListener("click", () => {
+          const color = chroma.random();
+          cscale = chroma.scale([
+            color.darken(1).hex(),
+            color.hex(),
+            color.brighten(0.6).hex(),
+            "#ffffff",
+          ]);
+          tubes.forEach((it) => {
+            const col = new THREE.Color(cscale(Math.random()).hex());
+            it.material.color = col;
+            it.material.needsUpdate = true;
+          });
+          lights.forEach(
+            (l) => (l.color = new THREE.Color(chroma.random().hex()))
+          );
+        });
+
+        // mobile perf
+        const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(
+          navigator.userAgent
+        );
+        if (mobile) renderer.setPixelRatio(1);
+
+        // reveal UI cards
+        function revealCards() {
+          const cards = document.querySelectorAll(".card");
+          cards.forEach((card, idx) => {
+            setTimeout(
+              () => card.classList.add("visible"),
+              120 +
+                (card.dataset.delay ? parseInt(card.dataset.delay) : idx * 80)
+            );
+          });
+        }
+        revealCards();
+
+        // header shrink
+        function onScrollHeader() {
+          if (window.scrollY > 18) header.classList.add("compact");
+          else header.classList.remove("compact");
+        }
+        window.addEventListener("scroll", onScrollHeader);
+        onScrollHeader();
+
+        // night toggle
+        const toggle = document.getElementById("toggle-theme");
+        toggle.addEventListener("click", () => {
+          document.documentElement.classList.toggle("night");
+          toggle.classList.toggle("muted");
+          toggle.textContent = document.documentElement.classList.contains(
+            "night"
+          )
+            ? "Day"
+            : "Night";
+        });
+
+        // perf check -> lower density if fps low
+        let frameCount = 0,
+          lastCheck = Date.now();
+        function perfCheck() {
+          frameCount++;
+          const now = Date.now();
+          if (now - lastCheck > 1000) {
+            const fps = frameCount / ((now - lastCheck) / 1000);
+            if (fps < 20 && !mobile) {
+              conf.tubeRadius = Math.max(1.2, conf.tubeRadius - 0.5);
+              makeTubes();
+            }
+            frameCount = 0;
+            lastCheck = now;
+          }
+          requestAnimationFrame(perfCheck);
+        }
+        perfCheck();
+      })();
+    </script>
+  </body>
 </html>

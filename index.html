@@ -193,6 +193,76 @@
         font-size: 13px;
         margin-top: 8px;
       }
+      /* ===== 顶部导航栏 ===== */
+
+      .top-nav {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 9999;
+
+        /* 玻璃态背景 */
+        background: rgba(20, 20, 20, 0.35);
+        backdrop-filter: blur(12px);
+
+        /* 微光边框 */
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+        padding: 12px 0;
+      }
+
+      .nav-inner {
+        width: 90%;
+        max-width: 980px;
+        margin: 0 auto;
+
+        display: flex;
+        justify-content: center;
+        gap: 28px;
+      }
+
+      .top-nav a {
+        color: #eaeaea;
+        font-size: 15px;
+        text-decoration: none;
+        font-weight: 500;
+
+        position: relative;
+        transition: color 0.25s ease;
+      }
+
+      /* 下划线动效 */
+      .top-nav a::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -4px;
+        width: 0%;
+        height: 2px;
+        background: linear-gradient(90deg, #00eaff, #7effff);
+        transition: width 0.25s ease;
+        border-radius: 2px;
+      }
+
+      /* hover 效果 */
+      .top-nav a:hover {
+        color: #ffffff;
+      }
+
+      .top-nav a:hover::after {
+        width: 100%;
+      }
+
+      /* ===== 手机端优化 ===== */
+      @media (max-width: 600px) {
+        .nav-inner {
+          gap: 18px;
+        }
+        .top-nav a {
+          font-size: 13px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -231,42 +301,14 @@
         >
       </div>
     </header>
-    <nav
-      style="
-        width: 100%;
-        padding: 15px 0;
-        background: #ffffffd9;
-        position: sticky;
-        top: 0;
-        backdrop-filter: blur(10px);
-        border-bottom: 1px solid #e5e5e5;
-        z-index: 999;
-      "
-    >
-      <div
-        style="
-          max-width: 900px;
-          margin: 0 auto;
-          display: flex;
-          gap: 20px;
-          font-size: 15px;
-        "
-      >
-        <a href="index.html" style="text-decoration: none; color: #333"
-          >ホーム</a
-        >
-        <a href="about.html" style="text-decoration: none; color: #333"
-          >このサイトについて</a
-        >
-        <a href="privacy.html" style="text-decoration: none; color: #333"
-          >プライバシーポリシー</a
-        >
-        <a href="contact.html" style="text-decoration: none; color: #333"
-          >お問い合わせ</a
-        >
+    <nav class="top-nav">
+      <div class="nav-inner">
+        <a href="index.html">ホーム</a>
+        <a href="about.html">このサイトについて</a>
+        <a href="privacy.html">プライバシーポリシー</a>
+        <a href="contact.html">お問い合わせ</a>
       </div>
     </nav>
-
     <main class="container" id="main">
       <section class="card" data-delay="0">
         <h2>当サイトについて</h2>
